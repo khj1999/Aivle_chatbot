@@ -1,0 +1,106 @@
+.chat-container {
+    max-width: 75%;
+    margin: 0 auto;
+    margin-top: 20px;
+}
+
+.chat-box {
+    height: 70vh;
+    overflow-y: scroll;
+    padding: 15px;
+    background-color: #111;
+}
+
+.chat-message {
+    margin-bottom: 15px;
+}
+
+.chat-input {
+    position: fixed;
+    align-self: center;
+    bottom: 15px;
+    width: 100%;
+    background-color: #000;
+    padding: 10px 0;
+    box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.nav-link.active {
+    text-decoration: underline;
+}
+
+.list-group-item {
+    cursor: pointer;
+    background: #000;
+    border: 1px solid #333;
+    color: #fff
+}
+
+.list-group-item:hover {
+    background-color: #f0f0f0;
+}
+
+.chat-input .input-group {
+    width: 100%;
+    margin: 0 auto;
+}
+
+.chat-input .btn {
+    width: 100px;
+}
+
+.navbar-dark.bg-dark {
+    background-color: #000 !important; /* 더 어두운 색상으로 변경 */
+}
+
+html, body {
+    background: #000; /*홈페이지 색 변경*/
+}
+
+h5 {
+    padding-left: 5px;
+    padding-top:10px;
+    color: #fff
+}
+
+.card {
+    border: 0px;
+}
+
+#new-chat-btn {
+    bottom: 10px;
+    background-color: #111;
+}
+
+.form-control {
+    background-color: #111; /* 기본 배경색 */
+    border: #333 solid; /* 기본 테두리 */
+    color: white; /* 텍스트 색상 */
+}
+
+.form-control:focus {
+    background-color: #111; /* 포커스 상태에서도 동일한 배경색 유지 */
+    border-color: #333; /* 포커스 상태에서도 동일한 테두리 색상 유지 */
+    box-shadow: none; /* 포커스 상태에서 생기는 기본 그림자 제거 */
+    color: white; /* 포커스 상태에서도 동일한 텍스트 색상 유지 */
+}
+
+.btn-dark {
+    background-color: #222;
+}
+
+#card_header{
+    background-color: #333;
+}
+
+.alert-dark {
+    color: #ffffff;
+    background-color: #343a40;
+    border-color: #343a40;
+}
+
+.alert-black {
+    color: #ffffff;
+    background-color: #222;
+    border-color: #222;
+}

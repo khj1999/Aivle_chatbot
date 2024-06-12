@@ -1,3 +1,4 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -5,25 +6,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login</title>
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
-    <style>
-        body {
-            background-color: #f8f9fa;
-        }
-        .login-container {
-            max-width: 400px;
-            margin: 50px auto;
-            padding: 30px;
-            background-color: #fff;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            border-radius: 8px;
-        }
-    </style>
+    <link rel="stylesheet" href="{% static "css/sign.css" %}">
 </head>
 <body>
     <!-- Navbar 시작 -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-        <div class="container">
-            <a class="navbar-brand" href="#">KHJ's ChatBot System</a>
+        <div class="container-fluid justify-content-between">
+            <a class="navbar-brand" href="{% url "ChatSystem:nav" %}">ChatBot System</a>
             <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
@@ -43,10 +32,10 @@
             <label for="id_password">Password</label>
             {{ form.password }}
         </div>
-        <button type="submit" class="btn btn-primary btn-block">Login</button>
+        <button type="submit" class="btn btn-dark btn-block">Login</button>
     </form>
     <div class="text-center mt-3">
-        <a href="{% url 'ChatSystem:signup' %}">Don't have an account? Sign up here</a>
+        <a href="{% url 'ChatSystem:signup' %}" id='signlink'>Don't have an account? Sign up here</a>
     </div>
 </div>
 

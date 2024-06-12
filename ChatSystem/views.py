@@ -6,6 +6,8 @@ from django import forms
 from django.urls import reverse
 from django.utils import timezone
 from django.contrib.sessions.models import Session
+from django.db import transaction
+
 
 # from langchain.chat_models import ChatOpenAI
 from langchain.schema import HumanMessage, AIMessage
@@ -53,20 +55,6 @@ from django.db.models import Q
 # 유저 객체
 User = get_user_model()
 
-# # Create your views here.
-# file_path = os.path.join('/Users/kimhyeonjun/Desktop/KT Aivle/Lecture/7th_mini_project/project/open_api_key.txt')
-
-# # 파일 열기 및 내용 읽기
-# try:
-#     with open(file_path, 'r', encoding='utf-8') as file:
-#         api_key = file.read()
-# except FileNotFoundError:
-#     print('파일을 찾을 수 없습니다.')
-
-# os.environ['OPENAI_API_KEY'] = api_key
-# openai.api_key = os.getenv('OPENAI_API_KEY')
-
-# Chroma 데이터베이스 초기화 - 사전에 database가 완성 되어 있다는 가정하에 진행 - aivleschool_qa.csv 내용이 저장된 상태임
 embeddings = OpenAIEmbeddings(model = "text-embedding-ada-002")
 database = Chroma(persist_directory = "./QnA_DB", embedding_function = embeddings)
 
@@ -75,6 +63,10 @@ database = Chroma(persist_directory = "./QnA_DB", embedding_function = embedding
 # HomePage
 def home(request):
     return render(request, 'ChatSystem/home/home.html')
+
+@login_required
+def nav(request):
+    return render(request, 'ChatSystem/home/nav.html')
 
 # Signup
 def signup(request):
@@ -85,7 +77,7 @@ def signup(request):
             print(form.cleaned_data['user_id'])
             user = form.save()
             login(request, user)  # 회원가입 후 자동 로그인
-            return redirect('ChatSystem:user_info')
+            return redirect('ChatSystem:nav')
         else:
             print(form.errors)
     else:
@@ -94,6 +86,10 @@ def signup(request):
 
 # Login
 def user_login(request):
+    # 이미 로그인된 사용자인지 확인
+    if request.user.is_authenticated:
+        return redirect('ChatSystem:nav')
+    
     if request.method == 'POST':
         form = LoginForm(request.POST)
         if form.is_valid():
@@ -105,7 +101,7 @@ def user_login(request):
                 # 세션에 사용자 정보를 저장
                 request.session['user_id'] = user.user_id
                 request.session['email'] = user.email
-                return redirect('ChatSystem:user_info')
+                return redirect('ChatSystem:nav')
             else:
                 return HttpResponse("로그인 정보가 올바르지 않습니다.")
     else:
@@ -194,7 +190,7 @@ def index_chat(request):
     else:
         memory = ConversationBufferMemory(memory_key="chat_history", return_messages=True)
         chat_id = str(uuid.uuid4())
-        Chat.objects.create(chat_id=chat_id, user=user)
+        Chat.objects.create(chat_id=chat_id, user=user, chat_name="ChatGPT")
         request.session['chat_memory'] = {chat_id: serialize_memory(memory.chat_memory.messages)}
         request.session['current_chat_id'] = chat_id
     return render(request, 'ChatSystem/chat/index.html', {'chat_id': chat_id})
@@ -228,7 +224,7 @@ def chat_ajax(request):
         chat_memory[chat_id] = serialize_memory(memory.chat_memory.messages)
         request.session['chat_memory'] = chat_memory
 
-        chat = Chat.objects.get(chat_id=chat_id, user=user)
+        chat = Chat.objects.get(chat_id=chat_id, user=user, chat_name="ChatGPT")
         Message.objects.create(chat=chat, sender='human', content=query)
         Message.objects.create(chat=chat, sender='ai', content=answer)
         chat.save()
@@ -252,7 +248,7 @@ def index_aivle_chat(request):
     else:
         memory = ConversationBufferMemory(memory_key="chat_history", return_messages=True)
         chat_id = str(uuid.uuid4())
-        Chat.objects.create(chat_id=chat_id, user=user)
+        Chat.objects.create(chat_id=chat_id, user=user, chat_name="AivleChat")
         request.session['chat_memory'] = {chat_id: serialize_memory(memory.chat_memory.messages)}
         request.session['current_chat_id'] = chat_id
     return render(request, 'ChatSystem/aivle_chat/index.html', {'chat_id': chat_id})
@@ -297,7 +293,7 @@ def aivle_chat_ajax(request):
         request.session['chat_memory'] = chat_memory
 
         # 데이터베이스에 메시지 저장
-        chat = Chat.objects.get(chat_id=chat_id, user=user)
+        chat = Chat.objects.get(chat_id=chat_id, user=user, chat_name="AivleChat")
         Message.objects.create(chat=chat, sender='human', content=query)
         Message.objects.create(chat=chat, sender='ai', content=result["answer"])
         chat.save()
@@ -337,44 +333,52 @@ def load_chat_history(request):
 @login_required
 def load_chat_list(request):
     user = request.user
-    chats = Chat.objects.filter(user=user).order_by('updated_at')
+    chats = Chat.objects.filter(user=user).order_by('-updated_at')
     response_data = {
-        'chats': [{"chat_id": chat.chat_id} for chat in chats]
+        'chats': [{"chat_id": chat.chat_id, "chat_name" : chat.chat_name} for chat in chats]
     }
     return JsonResponse(response_data)
 
 # 대화목록 생성
 @login_required
 def create_chat(request):
-    user = request.user
-    chat_id = str(uuid.uuid4())
-    Chat.objects.create(chat_id=chat_id, user=user)
-    memory = ConversationBufferMemory(memory_key="chat_history", return_messages=True)
-    request.session['chat_memory'] = {chat_id: serialize_memory(memory.chat_memory.messages)}
-    request.session['current_chat_id'] = chat_id
-    return JsonResponse({'chat_id': chat_id})
+    if request.method == 'POST':
+        user = request.user
+        chat_id = str(uuid.uuid4())
+        chat_name = request.POST.get('chat_name', 'ChatGPT')
+        Chat.objects.create(chat_id=chat_id, user=user, chat_name=chat_name)
+        memory = ConversationBufferMemory(memory_key="chat_history", return_messages=True)
+        request.session['chat_memory'] = {chat_id: serialize_memory(memory.chat_memory.messages)}
+        request.session['current_chat_id'] = chat_id
+        return JsonResponse({'chat_id': chat_id})
+    return JsonResponse({'status': 'error', 'message': 'Invalid request method.'}, status=400)
 
 # 대화목록 삭제
 @login_required
 def delete_chat(request, chat_id):
     try:
-        # 채팅 객체를 가져옵니다.
-        chat = Chat.objects.get(chat_id=chat_id, user=request.user)
-        chat.delete()
-        
-        # 세션에서 chat_id를 삭제합니다.
-        chat_memory = request.session.get('chat_memory', {})
-        if chat_id in chat_memory:
-            del chat_memory[chat_id]
-            request.session['chat_memory'] = chat_memory
-        else:
-            return JsonResponse({'status': 'error', 'message': 'Chat memory not found in session'}, status=400)
-        
-        # 현재 채팅 ID가 삭제된 채팅 ID와 같은 경우 세션에서 제거.
-        if request.session.get('current_chat_id') == chat_id:
-            del request.session['current_chat_id']
-        
-        return JsonResponse({'status': 'success', 'message': 'Chat deleted successfully'})
+        with transaction.atomic():
+            # 채팅 객체를 가져옵니다.
+            chat = Chat.objects.get(chat_id=chat_id, user=request.user)
+            chat.delete()
+            
+            # 세션에서 chat_id를 삭제합니다.
+            chat_memory = request.session.get('chat_memory', {})
+            if chat_id in chat_memory:
+                del chat_memory[chat_id]
+                request.session['chat_memory'] = chat_memory
+            else:
+                # chat_id가 세션에 없을 경우 경고 메시지 반환
+                return JsonResponse({'status': 'error', 'message': 'Chat memory not found in session'}, status=400)
+            
+            # 현재 채팅 ID가 삭제된 채팅 ID와 같은 경우 세션에서 제거.
+            if request.session.get('current_chat_id') == chat_id:
+                del request.session['current_chat_id']
+            
+            # 세션 데이터를 명시적으로 저장합니다.
+            request.session.modified = True
+
+            return JsonResponse({'status': 'success', 'message': 'Chat deleted successfully'})
     except Chat.DoesNotExist:
         return JsonResponse({'status': 'error', 'message': 'Chat not found'}, status=404)
     except KeyError as e:

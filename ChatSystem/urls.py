@@ -6,6 +6,7 @@ app_name = 'ChatSystem'
 urlpatterns = [
     # 홈페이지
     path('', views.home, name='home'),
+    path('nav', views.nav, name='nav'),
 
     # 회원가입, 로그인
     path('user_info', views.user_info, name='user_info'),

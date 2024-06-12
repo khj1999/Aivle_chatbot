@@ -1,0 +1,27 @@
+body {
+    background-color: #000;
+}
+.navbar-dark.bg-dark {
+    background-color: #000 !important; /* 더 어두운 색상으로 변경 */
+}
+.container {
+    max-width: 400px;
+    margin: 50px auto;
+    padding: 30px;
+    background-color: #000;
+    color: #fff;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+}
+.form-control {
+    background-color: #000;
+    border: 1px solid #333;
+}
+.form-control:focus {
+    background-color: #000;
+    border: 1px solid #333;
+    color: #fff;
+}
+#signlink {
+    color: #555;
+}
