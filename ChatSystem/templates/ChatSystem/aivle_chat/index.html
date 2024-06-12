@@ -10,6 +10,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
     <link rel="stylesheet" href="{% static "css/chat.css" %}">
+    {% comment %} <script src={% static "js/aivle_chat.js" %}></script> {% endcomment %}
 </head>
 <body>
     <!-- Navbar 시작 -->
@@ -56,7 +57,7 @@
             <!-- Chat Box Column -->
             <div class="col-md-9">
                 <div class="card">
-                    <div class="card-header bg-dark text-white">
+                    <div class="card-header text-white" id="card_header">
                         ChatGPT 대화 기록
                     </div>
                     <div class="card-body chat-box" id="chat-box">
@@ -99,13 +100,64 @@
                     method: 'GET',
                     success: function(response) {
                         $('#chat-list').empty();
-                        if (response.chats.length === 0) { // 위치 바꿔야함 먼저 체크하는게 아닌 
-                            // chat-list가 비어 있을 때 create_chat을 실행
+            
+                        // response.chats를 순회하여 idx를 증가시킴
+                        response.chats.forEach(function(chat, index) {
+                            if (chat.chat_name === 'AivleChat') {
+                                idx++;
+                                let chatItem = $(
+                                    '<div class="list-group-item list-group-item-action d-flex justify-content-between align-items-center chat-item" data-chat-id="' + chat.chat_id + '">' +
+                                    '<div class="d-flex justify-content-between align-items-center w-100">' +
+                                    '<span>AivleChat 대화' + (idx) + '</span>' +
+                                    '<button class="btn btn-danger btn-sm delete-chat-btn" data-chat-id="' + chat.chat_id + '">삭제</button>' +
+                                    '</div>' +
+                                    '</div>'
+                                );
+            
+                                $('#chat-list').append(chatItem);
+            
+                                chatItem.on('click', function() {
+                                    let chat_id = $(this).data('chat-id');
+                                    $('#chat-id').val(chat_id);
+                                    loadChatHistory(chat_id);
+                                });
+            
+                                chatItem.find('.delete-chat-btn').on('click', function(event) {
+                                    event.stopPropagation();
+                                    const chatId = $(this).data('chat-id');
+                                    if (confirm('정말 이 대화를 삭제하시겠습니까?')) {
+                                        $.ajax({
+                                            url: '{% url "ChatSystem:delete_chat" chat_id="chat_id_placeholder" %}'.replace('chat_id_placeholder', chatId),
+                                            method: 'POST',
+                                            data: {
+                                                'csrfmiddlewaretoken': '{{ csrf_token }}'
+                                            },
+                                            success: function(response) {
+                                                if (response.status === 'success') {
+                                                    loadChatList(); // 대화 목록을 다시 로드하여 삭제된 대화를 반영합니다.
+                                                    $('#chat-box').empty(); // 삭제된 대화 내용을 클리어합니다.
+                                                    //alert(response.message);
+                                                } else {
+                                                    alert(response.message);
+                                                }
+                                            },
+                                            error: function(xhr, errmsg, err) {
+                                                loadChatList();
+                                                console.log(xhr.status + ": " + xhr.responseText);
+                                            }
+                                        });
+                                    }
+                                });
+                            }
+                        });
+            
+                        // idx가 0일 때 create_chat을 실행
+                        if (idx === 0) {
                             $.ajax({
                                 url: '{% url "ChatSystem:create_chat" %}',
                                 method: 'POST',
                                 data: {
-                                    'chat_name' : 'AivleChat',
+                                    'chat_name': 'AivleChat',
                                     'csrfmiddlewaretoken': '{{ csrf_token }}'
                                 },
                                 success: function(createResponse) {
@@ -118,55 +170,6 @@
                                 },
                                 error: function(xhr, errmsg, err) {
                                     console.log(xhr.status + ": " + xhr.responseText);
-                                }
-                            });
-                        } else {
-                            response.chats.forEach(function(chat, index) {
-                                if (chat.chat_name === 'AivleChat') {
-                                    idx++;
-                                    let chatItem = $(
-                                        '<div class="list-group-item list-group-item-action d-flex justify-content-between align-items-center chat-item" data-chat-id="' + chat.chat_id + '">' +
-                                        '<div class="d-flex justify-content-between align-items-center w-100">' +
-                                        '<span>AivleChat 대화' + (idx) + '</span>' +
-                                        '<button class="btn btn-danger btn-sm delete-chat-btn" data-chat-id="' + chat.chat_id + '">삭제</button>' +
-                                        '</div>' +
-                                        '</div>'
-                                    );
-            
-                                    $('#chat-list').append(chatItem);
-            
-                                    chatItem.on('click', function() {
-                                        let chat_id = $(this).data('chat-id');
-                                        $('#chat-id').val(chat_id);
-                                        loadChatHistory(chat_id);
-                                    });
-            
-                                    chatItem.find('.delete-chat-btn').on('click', function(event) {
-                                        event.stopPropagation();
-                                        const chatId = $(this).data('chat-id');
-                                        if (confirm('정말 이 대화를 삭제하시겠습니까?')) {
-                                            $.ajax({
-                                                url: '{% url "ChatSystem:delete_chat" chat_id="chat_id_placeholder" %}'.replace('chat_id_placeholder', chatId),
-                                                method: 'POST',
-                                                data: {
-                                                    'csrfmiddlewaretoken': '{{ csrf_token }}'
-                                                },
-                                                success: function(response) {
-                                                    if (response.status === 'success') {
-                                                        loadChatList(); // 대화 목록을 다시 로드하여 삭제된 대화를 반영합니다.
-                                                        $('#chat-box').empty(); // 삭제된 대화 내용을 클리어합니다.
-                                                        //alert(response.message);
-                                                    } else {
-                                                        alert(response.message);
-                                                    }
-                                                },
-                                                error: function(xhr, errmsg, err) {
-                                                    loadChatList();
-                                                    console.log(xhr.status + ": " + xhr.responseText);
-                                                }
-                                            });
-                                        }
-                                    });
                                 }
                             });
                         }

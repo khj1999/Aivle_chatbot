@@ -10,6 +10,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
     <link rel="stylesheet" href="{% static "css/chat.css" %}">
+    {% comment %} <script src={% static "js/chat.js" %}></script> {% endcomment %}
 </head>
 <body>
     <!-- Navbar 시작 -->
@@ -146,12 +147,37 @@
                                 });
                             }
                         });
+                        
+                        // idx가 0 이면 새로운 ChatGPT 채팅을 생성
+                        if (idx === 0) {
+                            $.ajax({
+                                url: '{% url "ChatSystem:create_chat" %}',
+                                method: 'POST',
+                                data: {
+                                    'chat_name': 'ChatGPT',
+                                    'csrfmiddlewaretoken': '{{ csrf_token }}'
+                                },
+                                success: function(createResponse) {
+                                    if (createResponse.status === 'success') {
+                                        loadChatList(); // 새로운 채팅을 생성한 후 다시 목록을 로드
+                                    } else {
+                                        loadChatList();
+                                        //alert(createResponse.message);
+                                    }
+                                },
+                                error: function(xhr, errmsg, err) {
+                                    console.log(xhr.status + ": " + xhr.responseText);
+                                }
+                            });
+                        }
+
                     },
                     error: function(xhr, errmsg, err) {
                         console.log(xhr.status + ": " + xhr.responseText);
                     }
                 });
             }
+
         
             function loadChatHistory(chat_id) {
                 $.ajax({
