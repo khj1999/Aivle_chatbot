@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ChatGPT 대화</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <style>
+        .chat-container {
+            max-width: 75%;
+            margin: 0 auto;
+            margin-top: 20px;
+        }
+
+        .chat-box {
+            height: 70vh;
+            overflow-y: scroll;
+            border: 1px solid #ccc;
+            padding: 15px;
+            background-color: #f9f9f9;
+        }
+
+        .chat-message {
+            margin-bottom: 15px;
+        }
+
+        .chat-input {
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            background-color: #fff;
+            padding: 10px 0;
+            box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .nav-link.active {
+            text-decoration: underline;
+        }
+
+        .list-group-item {
+            cursor: pointer;
+        }
+
+        .list-group-item:hover {
+            background-color: #f0f0f0;
+        }
+
+        .chat-input .input-group {
+            width: 75%;
+            margin: 0 auto;
+        }
+
+        .chat-input .btn {
+            width: 100px;
+        }
+    </style>
+</head>
+<body>
+        <!-- Navbar 시작 -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+                <a class="navbar-brand" href="#">KHJ's ChatBot System</a>
+                <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarNav">
+                    <ul class="navbar-nav ml-auto">
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'ChatSystem:user_info' %}">내 정보</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url "ChatSystem:aivle_chat" %}">Aivle QnA</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url "ChatSystem:chat" %}">ChatGPT</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'ChatSystem:logout' %}">로그아웃</a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+        <!-- Navbar 끝 -->
+    <div class="container mt-3 chat-container">
+        <div class="row">
+            <!-- Chat List Column -->
+            <div class="col-md-3">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <h5>대화 목록</h5>
+                    <button class="btn btn-dark btn-sm" id="new-chat-btn">새로운 대화</button>
+                </div>
+                <div class="list-group" id="chat-list">
+                    <!-- 대화 목록을 동적으로 추가 -->
+                    <!-- 여기에 대화 목록 항목이 동적으로 추가됩니다 -->
+
+                </div>
+            </div>
+
+            <!-- Chat Box Column -->
+            <div class="col-md-9">
+                <div class="card">
+                    <div class="card-header bg-dark text-white">
+                        ChatGPT 대화 기록
+                    </div>
+                    <div class="card-body chat-box" id="chat-box">
+                        <!-- 대화 기록이 여기에 표시됩니다 -->
+                        <div class="chat-message">
+                            <div class="alert alert-secondary" role="alert">
+                                <strong>ChatGPT:</strong> 안녕하세요! 무엇을 도와드릴까요?
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 입력 창-->
+    <div class="chat-input">
+        <div class="container">
+            <form id="chat-form">
+                {% csrf_token %}
+                <input type="hidden" id="chat-id" name="chat-id" value="{{ chat_id }}">
+                <div class="input-group">
+                    <textarea class="form-control" id="user-input" rows="2" placeholder="메시지를 입력하세요..."></textarea>
+                    <div class="input-group-append">
+                        <button class="btn btn-dark" type="submit">전송</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Load chat list on page load
+            loadChatList();
+        
+            function loadChatList() {
+                $.ajax({
+                    url: '{% url "ChatSystem:load_chat_list" %}',
+                    method: 'GET',
+                    success: function(response) {
+                        $('#chat-list').empty();
+                        response.chats.forEach(function(chat, index) {
+                            let chatItem = $(
+                                '<div class="list-group-item list-group-item-action d-flex justify-content-between align-items-center chat-item" data-chat-id="' + chat.chat_id + '">' +
+                                '<span>ChatGPT 대화' + (index + 1) + '</span>' +
+                                '</div>'
+                            );
+                            let deleteButton = $('<button class="btn btn-danger btn-sm delete-chat-btn" data-chat-id="' + chat.chat_id + '">삭제</button>');
+                            
+                            let chatItemContainer = $('<div class="d-flex justify-content-between align-items-center w-100"></div>');
+                            chatItemContainer.append('<span>ChatGPT 대화' + (index + 1) + '</span>');
+                            chatItemContainer.append(deleteButton);
+                            
+                            chatItem.empty().append(chatItemContainer);
+                            $('#chat-list').append(chatItem);
+                            
+                            chatItem.on('click', function() {
+                                let chat_id = $(this).data('chat-id');
+                                $('#chat-id').val(chat_id);
+                                loadChatHistory(chat_id);
+                            });
+            
+                            deleteButton.on('click', function(event) {
+                                event.stopPropagation();
+                                const chatId = $(this).data('chat-id');
+                                if (confirm('정말 이 대화를 삭제하시겠습니까?')) {
+                                    $.ajax({
+                                        url: '{% url "ChatSystem:delete_chat" chat_id="chat_id_placeholder" %}'.replace('chat_id_placeholder', chatId),
+                                        method: 'POST',
+                                        data: {
+                                            'csrfmiddlewaretoken': '{{ csrf_token }}'
+                                        },
+                                        success: function(response) {
+                                            if (response.status === 'success') {
+                                                loadChatList(); // 대화 목록을 다시 로드하여 삭제된 대화를 반영합니다.
+                                                $('#chat-box').empty(); // 삭제된 대화 내용을 클리어합니다.
+                                                alert(response.message);
+                                            } else {
+                                                alert(response.message);
+                                            }
+                                        },
+                                        error: function(xhr, errmsg, err) {
+                                            console.log(xhr.status + ": " + xhr.responseText);
+                                        }
+                                    });
+                                }
+                            });
+                        });
+                    },
+                    error: function(xhr, errmsg, err) {
+                        console.log(xhr.status + ": " + xhr.responseText);
+                    }
+                });
+            }
+            
+            
+            function loadChatHistory(chat_id) {
+                $.ajax({
+                    url: '{% url "ChatSystem:load_chat_history" %}',
+                    method: 'GET',
+                    data: { 'chat_id': chat_id },
+                    success: function(response) {
+                        $('#chat-box').empty();
+                        response.messages.forEach(function(message) {
+                            let role = message.type === 'human' ? 'You' : 'GPT-3.5';
+                            $('#chat-box').append('<div class="chat-message"><div class="alert alert-' + (role === 'You' ? 'primary' : 'secondary') + '" role="alert"><strong>' + role + ':</strong> ' + message.data + '</div></div>');
+                        });
+                    },
+                    error: function(xhr, errmsg, err) {
+                        console.log(xhr.status + ": " + xhr.responseText);
+                    }
+                });
+            }
+        
+            $('#chat-form').on('submit', function(event) {
+                event.preventDefault();
+        
+                let question = $('#user-input').val();
+                let chat_id = $('#chat-id').val();
+                console.log(chat_id);
+                if (question.trim() !== '') {
+                    $.ajax({
+                        url: '{% url "ChatSystem:aivle_chat_ajax" %}',
+                        method: 'POST',
+                        data: {
+                            'question': question,
+                            'chat_id': chat_id,
+                            'csrfmiddlewaretoken': '{{ csrf_token }}'
+                        },
+                        success: function(response) {
+                            $('#chat-box').append('<div class="chat-message"><div class="alert alert-primary" role="alert"><strong>You:</strong> ' + response.question + '</div></div>');
+                            $('#chat-box').append('<div class="chat-message"><div class="alert alert-secondary" role="alert"><strong>GPT-3.5:</strong> ' + response.result + '</div></div>');
+                            $('#user-input').val('');
+                            $('#chat-box').scrollTop($('#chat-box')[0].scrollHeight);
+                        },
+                        error: function(xhr, errmsg, err) {
+                            console.log(xhr.status + ": " + xhr.responseText);
+                        }
+                    });
+                }
+            });
+        
+            $('#new-chat-btn').on('click', function() {
+                $.ajax({
+                    url: '{% url "ChatSystem:create_chat" %}',
+                    method: 'POST',
+                    data: {
+                        'csrfmiddlewaretoken': '{{ csrf_token }}'
+                    },
+                    success: function(response) {
+                        loadChatList();
+                        $('#chat-id').val(response.chat_id);
+                        $('#chat-box').empty().append('<div class="chat-message"><div class="alert alert-secondary" role="alert"><strong>ChatGPT:</strong> 안녕하세요! 무엇을 도와드릴까요?</div></div>');
+                    },
+                    error: function(xhr, errmsg, err) {
+                        console.log(xhr.status + ": " + xhr.responseText);
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>
