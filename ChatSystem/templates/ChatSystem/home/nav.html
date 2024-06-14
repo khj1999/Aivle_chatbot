@@ -1,3 +1,4 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="ko">
   <head>
@@ -9,121 +10,7 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
-
-    <style>
-      html, body {
-        height: 100%; 
-        background: #000; /*홈페이지 색 변경*/
-        margin: 0;
-      }
-
-      .container {
-        padding-left: 2.2%;
-        display: flex;
-        gap: 5vmin;
-        margin-top: 12em;
-      }
-
-      .box,
-      .box1 {
-        width: 60vmin;
-        height: 50vmin;
-        display: grid;
-        place-content: center;
-        color: white;
-        text-shadow: 0 1px 0 #000;
-        position: relative;
-        background: #343a40;
-
-        --border-angle: 0turn;
-        --main-bg: conic-gradient(
-          from var(--border-angle),
-          #000,              /*박스 색 변경*/
-          #000 5%,           /*박스 색 변경*/
-          #000 60%,          /*박스 색 변경*/
-          #000 95%           /*박스 색 변경*/
-        );
-
-        border: solid 5px transparent;
-        border-radius: 1em;
-        --gradient-border: conic-gradient(
-          from var(--border-angle),
-          transparent 25%,
-          #08f,                /*애니메이션 박스 테두리*/
-          #f03 99%,          /*애니메이션 박스 테두리*/
-          transparent
-        );
-
-        background: var(--main-bg) padding-box,
-          var(--gradient-border) border-box, var(--main-bg) border-box;
-
-        background-position: center center;
-
-        animation: bg-spin 3s linear infinite;
-        cursor: pointer;
-      }
-
-      @keyframes bg-spin {
-        to {
-          --border-angle: 1turn;
-        }
-      }
-
-      .box:hover,
-      .box1:hover {
-        animation-play-state: paused;
-      }
-
-      .box img,
-      .box1 img {
-        position: absolute;
-        top: 50%;
-        left: 15%;
-        transform: translateY(-50%);
-        width: 20%;
-      }
-
-      .text,
-      .text1 {
-        position: absolute;
-        top: 50%;
-        left: 40%;
-        transform: translateY(-50%);
-        font-size: 2.5em;
-        color: white;          /*박스 안 글자색*/
-      }
-
-      @property --border-angle {
-        syntax: "<angle>";
-        inherits: true;
-        initial-value: 0turn;
-      }
-
-      .nav-link.active {
-        text-decoration: underline;
-      }
-
-      .list-group-item {
-        cursor: pointer;
-      }
-
-      .list-group-item:hover {
-        background-color: #f0f0f0;
-      }
-
-      .chat-input .input-group {
-        width: 75%;
-        margin: 0 auto;
-      }
-
-      .chat-input .btn {
-        width: 100px;
-      }
-
-      .navbar-dark.bg-dark {
-        background-color: #000 !important; /* 더 어두운 색상으로 변경 */
-      }
-    </style>
+    <link rel="stylesheet" href="{% static "css/nav.css" %}">
   </head>
   <body>
         <!-- Navbar 시작 -->

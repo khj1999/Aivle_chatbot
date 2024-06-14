@@ -11,7 +11,9 @@ db.sqlite3
 db.sqlite3-journal
 media
 
-aivle_qna.csv
+질문통합.csv
+최종본.csv
+
 
 secret_key.txt
 open_api_key.txt

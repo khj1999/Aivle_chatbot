@@ -64,7 +64,7 @@ database = Chroma(persist_directory = "./QnA_DB", embedding_function = embedding
 def home(request):
     return render(request, 'ChatSystem/home/home.html')
 
-@login_required
+@login_required(login_url='ChatSystem:login')
 def nav(request):
     return render(request, 'ChatSystem/home/nav.html')
 
@@ -110,7 +110,7 @@ def user_login(request):
     return render(request, 'ChatSystem/sign/login.html', {'form': form})
 
 # Logout
-@login_required
+@login_required(login_url='ChatSystem:login')
 def user_logout(request):
     # 세션 데이터 삭제
     if 'user_id' in request.session:
@@ -122,7 +122,7 @@ def user_logout(request):
     return redirect('ChatSystem:login')
 
 # user_data
-@login_required
+@login_required(login_url='ChatSystem:login')
 def user_info(request):
     user = request.user
     if request.method == 'POST':
@@ -141,7 +141,7 @@ def user_info(request):
     return render(request, 'ChatSystem/sign/user_info.html', context=context)
 
 # user_delete
-@login_required
+@login_required(login_url='ChatSystem:login')
 def delete_user(request):
     user = request.user
     user.delete()
@@ -182,7 +182,7 @@ def deserialize_memory(serialized_memory):
 
 
 # Chat index
-@login_required
+@login_required(login_url='ChatSystem:login')
 def index_chat(request):
     user = request.user
     if 'current_chat_id' in request.session:
@@ -196,7 +196,7 @@ def index_chat(request):
     return render(request, 'ChatSystem/chat/index.html', {'chat_id': chat_id})
 
 # Chat GPT ajax
-@login_required
+@login_required(login_url='ChatSystem:login')
 def chat_ajax(request):
     if request.method == 'POST':
         query = request.POST.get('question')
@@ -240,7 +240,7 @@ def chat_ajax(request):
         return render(request, 'ChatSystem/chat/index.html')
 
 # Aivle Chat index
-@login_required
+@login_required(login_url='ChatSystem:login')
 def index_aivle_chat(request):
     user = request.user
     if 'current_chat_id' in request.session:
@@ -254,7 +254,7 @@ def index_aivle_chat(request):
     return render(request, 'ChatSystem/aivle_chat/index.html', {'chat_id': chat_id})
 
 # Aivle Chat ajax
-@login_required
+@login_required(login_url='ChatSystem:login')
 def aivle_chat_ajax(request):
     if request.method == 'POST':
         query = request.POST.get('question')
@@ -313,7 +313,7 @@ def aivle_chat_ajax(request):
 
 
 # Load chat history
-@login_required
+@login_required(login_url='ChatSystem:login')
 def load_chat_history(request):
     chat_id = request.GET.get('chat_id')
     user = request.user
@@ -330,7 +330,7 @@ def load_chat_history(request):
         return JsonResponse({'messages': []})
 
 # Load chat list
-@login_required
+@login_required(login_url='ChatSystem:login')
 def load_chat_list(request):
     user = request.user
     chats = Chat.objects.filter(user=user).order_by('-updated_at')
@@ -340,7 +340,7 @@ def load_chat_list(request):
     return JsonResponse(response_data)
 
 # 대화목록 생성
-@login_required
+@login_required(login_url='ChatSystem:login')
 def create_chat(request):
     if request.method == 'POST':
         user = request.user
@@ -354,7 +354,7 @@ def create_chat(request):
     return JsonResponse({'status': 'error', 'message': 'Invalid request method.'}, status=400)
 
 # 대화목록 삭제
-@login_required
+@login_required(login_url='ChatSystem:login')
 def delete_chat(request, chat_id):
     try:
         with transaction.atomic():

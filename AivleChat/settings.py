@@ -62,6 +62,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'AivleChat.middleware.RedirectExceptionMiddleware',  # 에러 발생시 홈으로 리다이렉트
 ]
 
 ROOT_URLCONF = 'AivleChat.urls'
@@ -169,6 +170,8 @@ SESSION_SAVE_EVERY_REQUEST = False  # 기본값은 False, True로 설정하면 �
 
 # 세션 만료 시간
 SESSION_COOKIE_AGE = 3600  # 2분 (기본값)
+
+LOGIN_URL = 'ChatSystem:login'
 
 # API Key
 file_path = os.path.join(BASE_DIR,'open_api_key.txt')
